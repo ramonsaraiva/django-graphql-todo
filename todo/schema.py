@@ -6,7 +6,6 @@ import users.schema
 
 from graphene import ObjectType
 from graphene_django.debug.types import DjangoDebug
-from graphene_django.filter import DjangoFilterConnectionField
 
 
 class Query(users.schema.Query, tasks.schema.Query, ObjectType):
