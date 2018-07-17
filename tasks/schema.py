@@ -1,9 +1,6 @@
 import django_filters
+import graphene
 
-from graphene import (
-    relay,
-    ObjectType,
-)
 from graphene_django import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
 from graphql_jwt.decorators import login_required
@@ -28,14 +25,30 @@ class TaskNode(LoginRequiredNode, DjangoObjectType):
     class Meta:
         model = Task
         filter_fields = ['title', 'done']
-        interfaces = (relay.Node,)
+        interfaces = (graphene.relay.Node,)
 
 
 class Query:
 
-    task = relay.Node.Field(TaskNode)
+    task = graphene.relay.Node.Field(TaskNode)
     tasks = DjangoFilterConnectionField(TaskNode)
 
     @login_required
     def resolve_tasks(self, info, **kwargs):
         return Task.objects.filter(user=info.context.user)
+
+
+class CreateTask(graphene.Mutation):
+
+    class Arguments:
+        title = graphene.String()
+
+    Output = TaskNode
+
+    @login_required
+    def mutate(self, info, title    ):
+        return Task.objects.create(title=title, user=info.context.user)
+
+
+class Mutation:
+    create_task = CreateTask.Field()

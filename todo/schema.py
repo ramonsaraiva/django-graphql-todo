@@ -13,7 +13,7 @@ class Query(users.schema.Query, tasks.schema.Query, ObjectType):
     debug = graphene.Field(DjangoDebug, name='__debug')
 
 
-class Mutation(users.schema.Mutation, ObjectType):
+class Mutation(users.schema.Mutation, tasks.schema.Mutation, ObjectType):
     """Bundle of mutations across all sub applications"""
     pass
 
