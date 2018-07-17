@@ -4,36 +4,18 @@ import graphene
 import tasks.schema
 import users.schema
 
-from graphene import (
-    relay,
-    ObjectType,
-)
-from graphene_django import DjangoObjectType
+from graphene import ObjectType
 from graphene_django.debug.types import DjangoDebug
 from graphene_django.filter import DjangoFilterConnectionField
 
-from django.contrib.auth.models import User
 
-
-class UserNode(DjangoObjectType):
-
-    class Meta:
-        model = User
-        filter_fields = ['username']
-        interfaces = (relay.Node,)
-
-
-class UserQuery:
-
-    user = relay.Node.Field(UserNode)
-    users = DjangoFilterConnectionField(UserNode)
-
-
-class Query(UserQuery, tasks.schema.Query, ObjectType):
+class Query(users.schema.Query, tasks.schema.Query, ObjectType):
+    """Bundle of queries across all sub applications"""
     debug = graphene.Field(DjangoDebug, name='__debug')
 
 
 class Mutation(users.schema.Mutation, ObjectType):
+    """Bundle of mutations across all sub applications"""
     pass
 
 
