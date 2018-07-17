@@ -38,16 +38,18 @@ class Query:
         return Task.objects.filter(user=info.context.user)
 
 
-class CreateTask(graphene.Mutation):
+class CreateTask(graphene.relay.ClientIDMutation):
 
-    class Arguments:
-        title = graphene.String()
+    class Input:
+        title = graphene.String(required=True)
 
-    Output = TaskNode
+    task = graphene.Field(TaskNode)
 
+    @classmethod
     @login_required
-    def mutate(self, info, title    ):
-        return Task.objects.create(title=title, user=info.context.user)
+    def mutate_and_get_payload(cls, root, info, title):
+        task = Task.objects.create(title=title, user=info.context.user)
+        return CreateTask(task=task)
 
 
 class Mutation:
