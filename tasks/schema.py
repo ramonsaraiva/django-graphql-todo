@@ -67,13 +67,37 @@ class UpdateTask(graphene.relay.ClientIDMutation):
     @classmethod
     @login_required
     def mutate_and_get_payload(cls, root, info, **input):
-        qs = Task.objects.filter(id=input['id'])
+        qs = Task.objects.filter(user=info.context.user, id=input['id'])
         if not qs:
             cls()
         qs.update(**input)
         return cls(task=qs.first())
 
 
+class DeleteTask(graphene.relay.ClientIDMutation):
+    """
+    Mutation that deletes a task with a given id to the current
+    authenticated user.
+
+    This could be simplified using DRF Serializers, as pointed out here:
+    http://docs.graphene-python.org/projects/django/en/latest/rest-framework/ 
+    """ 
+
+    class Input:
+        id = graphene.ID(required=True)
+
+    count = graphene.Boolean()
+
+    @classmethod
+    @login_required
+    def mutate_and_get_payload(cls, root, info, **input):
+        n, _ = Task.objects.filter(
+            user, info.context.user, id=input['id']).delete()
+        return cls(count=n)
+
+
+
 class Mutation:
     create_task = CreateTask.Field()
     update_task = UpdateTask.Field()
+    delete_task = DeleteTask.Field()
