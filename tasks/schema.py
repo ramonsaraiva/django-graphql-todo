@@ -6,7 +6,10 @@ from graphene_django import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
 from graphql_jwt.decorators import login_required
 
-from users.mixins import LoginRequiredNodeMixin
+from gql.relay import (
+    LoginRequiredMutation,
+    NodeOwnerMixin,
+)
 from .inputs import (
     TaskCreateInput,
     TaskUpdateInput
@@ -14,7 +17,7 @@ from .inputs import (
 from .models import Task
 
 
-class TaskNode(LoginRequiredNodeMixin, DjangoObjectType):
+class TaskNode(NodeOwnerMixin, DjangoObjectType):
 
     class Meta:
         model = Task
@@ -32,7 +35,7 @@ class Query:
         return Task.objects.filter(user=info.context.user)
 
 
-class CreateTask(graphene.relay.ClientIDMutation):
+class CreateTask(LoginRequiredMutation):
     """
     Mutation that creates a task with a given title, to the current
     authenticated user.
@@ -44,13 +47,12 @@ class CreateTask(graphene.relay.ClientIDMutation):
     task = graphene.Field(TaskNode)
 
     @classmethod
-    @login_required
     def mutate_and_get_payload(cls, root, info, title):
         task = Task.objects.create(title=title, user=info.context.user)
         return CreateTask(task=task)
 
 
-class UpdateTask(graphene.relay.ClientIDMutation):
+class UpdateTask(LoginRequiredMutation):
     """
     Mutation that updates a task with a given a global id, title and done
     to the current authenticated user.
@@ -63,7 +65,6 @@ class UpdateTask(graphene.relay.ClientIDMutation):
     task = graphene.Field(TaskNode)
 
     @classmethod
-    @login_required
     def mutate_and_get_payload(cls, root, info, **input):
         try:
             _, task_id = Node.from_global_id(input['id'])
@@ -76,7 +77,7 @@ class UpdateTask(graphene.relay.ClientIDMutation):
         return cls(task=qs.first())
 
 
-class DeleteTask(graphene.relay.ClientIDMutation):
+class DeleteTask(LoginRequiredMutation):
     """
     Mutation that deletes a task with a given id to the current
     authenticated user.
@@ -88,7 +89,6 @@ class DeleteTask(graphene.relay.ClientIDMutation):
     count = graphene.Int()
 
     @classmethod
-    @login_required
     def mutate_and_get_payload(cls, root, info, **input):
         try:
             _, task_id = Node.from_global_id(input['id'])
